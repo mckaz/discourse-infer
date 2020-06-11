@@ -291,10 +291,10 @@ module Jobs
 
     # If we are able to queue a job, do it
     if Jobs.run_later?
-      hash = {
+      hash = RDL.type_cast({
         'class' => klass,
         'args' => [opts]
-      }
+      }, "Hash<String, %any>", force: true)
 
       if delay = opts.delete(:delay_for)
         if delay.to_f > 0

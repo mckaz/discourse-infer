@@ -1,0 +1,82 @@
+Difference encountered for [s]User#new_from_params.
+Inferred: (([ []: (:name) -> { { [s]User#new_from_params arg: params }#[] ret: ret } ] and [ []: (:username) -> { { [s]User#new_from_params arg: params }#[] ret: ret } ] and { name: String, email: String, password: { { [s]User#new_from_params arg: params }#[] ret: ret }, username: String })) -> User
+Original: ({ name: String, email: String, password: String, username: String }) -> User
+# 1
+Difference encountered for [s]User#username_available?.
+Inferred: (String, ?[ present?: () -> { { [s]User#username_available? arg: email }#present? ret: ret } ], { allow_reserved_username: ?[ !: () -> { { [s]User#username_available? arg: allow_reserved_username }#! ret: ret } ] }) -> (false or true)
+Original: (String, ?String) -> (false or true)
+# 3
+Difference encountered for User#featured_user_badges.
+Inferred: (?Integer) -> Array<(Badge or BadgeType or GrantedBy or Post or Topic or User or UserBadge)>
+Original: (?Integer) -> %any
+# 5
+Difference encountered for User#activate.
+Inferred: () -> nil
+Original: () -> (false or nil or true)
+# 6
+Difference encountered for [s]Post#find_by_detail.
+Inferred: ((String or Symbol), (String or Symbol)) -> Post
+Original: (String, String) -> Post
+# 9
+Difference encountered for Post#add_detail.
+Inferred: ((String or Symbol), (String or Symbol), ?((String or Symbol))) -> PostDetail
+Original: (String, String, ?String) -> PostDetail
+# 13
+Difference encountered for [s]Archetype#private_message.
+Inferred: () -> 'private_message'
+Original: () -> String
+# 14
+Difference encountered for Group#posts_for.
+Inferred: (Guardian, ?([ []: (:before_post_id) -> { { Group#posts_for arg: opts }#[] ret: ret } ] and [ []: (:category_id) -> { { Group#posts_for arg: opts }#[] ret: ret } ])) -> { Group#posts_for ret: ret }
+Original: (Guardian, ?Hash<Symbol, Integer>) -> ActiveRecord_Relation<JoinTable<Post, (Category or Topic or User)>>
+# 15
+Difference encountered for Group#messages_for.
+Inferred: (Guardian, ?([ []: (:before_post_id) -> { { Group#messages_for arg: opts }#[] ret: ret } ] and [ []: (:category_id) -> { { Group#messages_for arg: opts }#[] ret: ret } ])) -> { Group#messages_for ret: ret }
+Original: (Guardian, ?Hash<Symbol, Integer>) -> ActiveRecord_Relation<JoinTable<Post, (Category or Topic or User)>>
+# 16
+Difference encountered for Group#mentioned_posts_for.
+Inferred: (Guardian, ?([ []: (:before_post_id) -> { { Group#mentioned_posts_for arg: opts }#[] ret: ret } ] and [ []: (:category_id) -> { { Group#mentioned_posts_for arg: opts }#[] ret: ret } ])) -> { Group#mentioned_posts_for ret: ret }
+Original: (Guardian, ?Hash<Symbol, Integer>) -> ActiveRecord_Relation<JoinTable<Post, (Category or GroupMention or Topic or User)>>
+# 17
+Difference encountered for [s]Group#desired_trust_level_groups.
+Inferred: ([ +: (10) -> { { [s]Group#desired_trust_level_groups arg: trust_level }#+ ret: ret } ]) -> Array<Integer>
+Original: (Integer) -> Array<Integer>
+# 18
+Difference encountered for [s]Group#user_trust_level_change!.
+Inferred: (Integer, [ +: (10) -> { { [s]Group#desired_trust_level_groups arg: trust_level }#+ ret: ret } ]) -> Array<Integer>
+Original: (Integer, Integer) -> Array<Integer>
+# 20
+Difference encountered for [s]Group#refresh_automatic_group!.
+Inferred: ((String or Symbol)) -> Group
+Original: (Symbol) -> Group
+# 22
+Difference encountered for [s]Group#lookup_group.
+Inferred: ((String or Symbol)) -> Group
+Original: (Symbol) -> Group
+# 24
+Difference encountered for [s]Draft#find_draft.
+Inferred: ((Integer and [ id: () -> { { [s]Draft#find_draft arg: user }#id ret: ret } ]), (String or Symbol)) -> Draft
+# 26
+Original: ((Integer or User), String) -> Draft
+Difference encountered for [s]Badge#trust_level_badge_ids.
+Inferred: () -> Array<Integer>
+Original: () -> [1, 2, 3, 4]
+Difference encountered for [s]EmailToken#valid_after.
+Inferred: () -> { [s]EmailToken#valid_after ret: ret }
+Original: () -> DateTime
+Difference encountered for [s]EmailToken#confirm.
+Inferred: ({ [s]EmailToken#confirm arg: token }, { skip_reviewable: ?{ [s]EmailToken#confirm arg: skip_reviewable } }) -> nil
+Original: (String) -> (false or true)
+Difference encountered for RateLimiter#initialize.
+Inferred: (User, 'first-day-replies-per-day', { RateLimiter#initialize arg: max }, Integer, { global: ?false }) -> RateLimiter
+Original: (User, String, Integer, Integer, ?{ global: (false or true) }) -> self
+# 31
+Difference encountered for UsernameValidator#initialize.
+Inferred: (String) -> UsernameValidator
+Original: (String) -> self
+# 33 manually counted correct
+Total correct (that could be automatically inferred): 28
+Total potential types: 77
+
+
+# Final 61/77

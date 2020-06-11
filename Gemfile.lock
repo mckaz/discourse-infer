@@ -1,3 +1,11 @@
+PATH
+  remote: ../../../checking_rdl/rdl
+  specs:
+    rdl (2.2.0)
+      method_source
+      parser (~> 2.3, >= 2.3.1.4)
+      sql-parser (~> 0.0.2)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -268,6 +276,7 @@ GEM
     public_suffix (3.0.3)
     puma (3.12.1)
     r2 (0.2.7)
+    racc (1.4.16)
     rack (2.0.7)
     rack-mini-profiler (1.0.2)
       rack (>= 1.2.0)
@@ -390,6 +399,8 @@ GEM
       actionpack (>= 4.0)
       activesupport (>= 4.0)
       sprockets (>= 3.0.0)
+    sql-parser (0.0.2)
+      racc
     sshkey (2.0.0)
     stackprof (0.2.12)
     test-prof (0.9.0)
@@ -510,6 +521,7 @@ DEPENDENCIES
   rb-inotify (~> 0.9)
   rbtrace
   rchardet
+  rdl!
   redis (= 4.0.1)
   redis-namespace
   rinku

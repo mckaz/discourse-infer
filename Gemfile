@@ -5,6 +5,9 @@ source 'https://rubygems.org'
 #source 'http://production.cf.rubygems.org'
 
 gem 'bootsnap', require: false, platform: :mri
+#gem 'rdl', path: "~/Documents/works/type-infer/rdl" #git: 'https://github.com/plum-umd/rdl.git', branch: 'infer'
+gem 'rdl', path: "~/Documents/works/checking_rdl/rdl"
+
 
 def rails_master?
   ENV["RAILS_MASTER"] == '1'

@@ -5,8 +5,9 @@ source 'https://rubygems.org'
 #source 'http://production.cf.rubygems.org'
 
 gem 'bootsnap', require: false, platform: :mri
-#gem 'rdl', path: "~/Documents/works/type-infer/rdl" #git: 'https://github.com/plum-umd/rdl.git', branch: 'infer'
-gem 'rdl', path: "~/Documents/works/checking_rdl/rdl"
+#gem 'rdl', git: 'https://github.com/tupl-tufts/rdl.git', branch: 'infer'
+gem 'rdl', git: 'https://github.com/mckaz/dsl-infer-rdl/', branch: 'infer'#path: '~/Documents/works/tmp-rdl/rdl'
+
 
 
 def rails_master?
@@ -28,6 +29,8 @@ else
   gem 'railties', '6.0.0'
   gem 'sprockets-rails'
 end
+
+gem 'sprockets', '3.7.2'
 
 gem 'seed-fu'
 
@@ -115,7 +118,9 @@ gem 'tilt', require: false
 
 gem 'execjs', require: false
 gem 'mini_racer'
-gem 'highline', '~> 1.7.0', require: false
+
+gem 'highline'#, '~> 1.7.0', require: false
+
 gem 'rack-protection' # security
 
 # Gems used only for assets and not required in production environments by default.
@@ -228,3 +233,4 @@ end
 gem 'webpush', require: false
 gem 'colored2', require: false
 gem 'maxminddb'
+

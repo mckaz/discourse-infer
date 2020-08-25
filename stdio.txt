@@ -1,0 +1,15 @@
+Starting resolution (2020-06-11 11:54:35 -0400)
+User-requested dependencies: [#<Gem::Resolver::DependencyRequest:0x00007fe17e8aef00 @dependency=<Gem::Dependency type=:runtime name="did_you_mean" requirements="= 1.4.0">, @requester=nil>, #<Gem::Resolver::DependencyRequest:0x00007fe17e8aeed8 @dependency=<Gem::Dependency type=:runtime name="bundler" requirements="= 1.17.2">, @requester=nil>]
+Resolving dependencies...Creating possibility state for bundler (= 1.17.2) (1 remaining)
+ Attempting to activate bundler-1.17.2
+ Activated bundler at bundler-1.17.2
+ Requiring nested dependencies ()
+ Creating possibility state for did_you_mean (= 1.4.0) (1 remaining)
+  Attempting to activate did_you_mean-1.4.0
+  Activated did_you_mean at did_you_mean-1.4.0
+  Requiring nested dependencies ()
+
+Finished resolution (2 steps) (Took 0.016445 seconds) (2020-06-11 11:54:35 -0400)
+Unactivated: 
+Activated: did_you_mean, bundler
+Warning: the running version of Bundler (1.17.2) is older than the version that created the lockfile (1.17.3). We suggest you upgrade to the latest version of Bundler by running `gem install bundler`.

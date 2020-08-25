@@ -21,7 +21,6 @@ RDL.infer User, :number_of_flags_given, time: :later
 RDL.infer User, :create_user_profile, time: :later
 RDL.infer User, :create_user_option, time: :later
 RDL.infer User, :create_email_token, time: :later
-RDL.infer User, :update_usernames, time: :later
 RDL.infer User, :seen_before?, time: :later
 ## Methods located in ~/discourse/app/models/email_token.rb
 RDL.infer EmailToken, 'self.active', time: :later
@@ -81,6 +80,7 @@ RDL.infer EmailToken, 'self.confirm', time: :later ## inferred %bot for first ar
 #RDL.infer EmailToken, 'self.atomic_confirm', time: :later
 
 #above method relies on this
+=begin
 RDL.infer EmailToken, 'self.confirmable', time: :later
 
 RDL.infer Invite, 'self.redeem_from_email', time: :later
@@ -88,39 +88,45 @@ RDL.infer Invite, 'self.redeem_from_email', time: :later
 RDL.infer Email, 'self.downcase', time: :later
 
 RDL.infer Email, 'self.is_valid?', time: :later
-
+=end
 #RDL.type PostActionType, 'self.notify_flag_type_ids', '() -> Array<Integer>', wrap: false
 RDL.infer PostActionType, 'self.notify_flag_type_ids', time: :later
-RDL.infer PostActionType, 'self.notify_flag_types', time: :later
+=begin
 RDL.infer PostActionType, 'self.notify_flag_types', time: :later
 RDL.infer PostActionType, 'self.flag_settings', time: :later
 RDL.infer_var_type PostActionType, :@flag_settings
-
+=end
 #RDL.type User, :new_user_posting_on_first_day?, '() -> %bool', wrap: false
 RDL.infer User, :new_user_posting_on_first_day?, time: :later
-#RDL.infer Roleable, :staff?, time: :later ## Part of  module Roleable that's included in User class, which causes issues finding methods during inference
+=begin
+# above relies on below
 RDL.infer User, :first_post_created_at, time: :later
+=end
 
 #RDL.type RateLimiter, :initialize, '(User, String, Integer, Integer, ?{global: %bool}) -> self', wrap: false
 RDL.infer RateLimiter, :initialize, time: :later
+=begin
 RDL.infer_var_type RateLimiter, :@user
 RDL.infer_var_type RateLimiter, :@type
 RDL.infer_var_type RateLimiter, :@key
 RDL.infer_var_type RateLimiter, :@max
 RDL.infer_var_type RateLimiter, :@secs
 RDL.infer_var_type RateLimiter, :@global
-
+=end
 #RDL.type Post, 'self.types', '() -> Hash<Symbol, Integer>', wrap: false
 #RDL.infer Post, 'self.types', time: :later
 #RDL.infer_var_type Post, :@types
 
 #RDL.type UsernameValidator, :initialize, '(String) -> self', wrap: false
 RDL.infer UsernameValidator, :initialize, time: :later
+=begin
 RDL.infer_var_type UsernameValidator, :@username
 RDL.infer_var_type UsernameValidator, :@errors
+=end
 
 #RDL.type UsernameValidator, :valid_format?, '() -> %bool', wrap: false
 RDL.infer UsernameValidator, :valid_format?, time: :later
+=begin
 RDL.infer UsernameValidator, :username_length_min?, time: :later
 RDL.infer UsernameValidator, :username_length_max?, time: :later
 RDL.infer UsernameValidator, :username_char_valid?, time: :later
@@ -129,19 +135,17 @@ RDL.infer UsernameValidator, :username_first_char_valid?, time: :later
 RDL.infer UsernameValidator, :username_last_char_valid?, time: :later
 RDL.infer UsernameValidator, :username_no_double_special?, time: :later
 RDL.infer UsernameValidator, :username_does_not_end_with_confusing_suffix?, time: :later
-
+=end
 #RDL.type Group, 'self.visibility_levels', '() -> Hash<Symbol, Integer>', wrap: false
 #RDL.infer Group, 'self.visibility_levels', time: :later
 #RDL.infer_var_type Group, :@visibility_levels
-
+=begin
 #RDL.type User, 'self.normalize_username', "(String) -> String", wrap: false
 RDL.infer User, 'self.normalize_username', time: :later
 
 #RDL.type User, 'self.username_exists?', "(String) -> %bool", wrap: false
 RDL.infer User, 'self.username_exists?', time: :later
-
-#RDL.type User, :create_reviewable, "() -> %bool or nil", wrap: false
-RDL.infer User, :create_reviewable, time: :later
+=end
 #RDL.infer Jobs, 'self.enqueue', time: :later
 
 ## Type annotations for variables and unchecked methods are below. The methods are from the Discourse app, or from external libraries.
@@ -172,5 +176,5 @@ end
 
 
 
-RDL.do_infer :later
+RDL.do_infer :later, num_times: 1#1
 

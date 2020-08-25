@@ -1,0 +1,379 @@
+Class,Method/Variable,Inferred Type,Original Type,Source Code,Comments
+[s]User,new_from_params,"({ name: XXX, email: XXX, password: XXX, username: XXX }) -> XXX","({ name: String, email: String, password: String, username: String }) -> User","def self.new_from_params(params)
+    user = User.new
+    user.name = params[:name]
+    user.email = params[:email]
+    user.password = params[:password]
+    user.username = params[:username]
+    user
+  end"
+[s]User,find_by_username,(String) -> User,(String) -> User,"def self.find_by_username(username)
+    find_by(username_lower: normalize_username(username))
+  end"
+[s]User,username_available?,"(String, ?[ present?: () -> XXX ], { allow_reserved_username: ?[ !: () -> XXX ] }) -> (false or true)","(String, ?String) -> (false or true)","def self.username_available?(username, email = nil, allow_reserved_username: false)
+    lower = normalize_username(username)
+    return false if !allow_reserved_username && reserved_username?(lower)
+    return true  if !username_exists?(lower)
+
+    # staged users can use the same username since they will take over the account
+    email.present? && User.joins(:user_emails).exists?(staged: true, username_lower: lower, user_emails: { primary: true, email: email })
+  end"
+[s]User,reserved_username?,(String) -> (false or true),(String) -> (false or true),"def self.reserved_username?(username)
+    username = normalize_username(username)
+
+    SiteSetting.reserved_usernames.unicode_normalize.split(""|"").any? do |reserved|
+      username.match?(/^#{Regexp.escape(reserved).gsub('\*', '.*')}$/)
+    end
+  end"
+User,featured_user_badges,(?Number) -> Array<(Badge or BadgeType or GrantedBy or Post or Topic or User or UserBadge)>,(?Number) -> %any,"def featured_user_badges(limit = 3)
+    tl_badge_ids = Badge.trust_level_badge_ids
+
+    query = user_badges
+      .group(:badge_id)
+      .select(UserBadge.attribute_names.map { |x| ""MAX(user_badges.#{x}) AS #{x}"" },
+                      'COUNT(*) AS ""count""',
+                      'MAX(badges.badge_type_id) AS badges_badge_type_id',
+                      'MAX(badges.grant_count) AS badges_grant_count')
+      .joins(:badge)
+      .order('badges_badge_type_id ASC, badges_grant_count ASC, badge_id DESC')
+      .includes(:user, :granted_by, { badge: :badge_type }, post: :topic)
+
+    tl_badge = query.where(""user_badges.badge_id IN (:tl_badge_ids)"",
+                           tl_badge_ids: tl_badge_ids)
+      .limit(1)
+
+    other_badges = query.where(""user_badges.badge_id NOT IN (:tl_badge_ids)"",
+                               tl_badge_ids: tl_badge_ids)
+      .limit(limit)
+
+    (tl_badge + other_badges).take(limit)
+  end"
+User,email_confirmed?,() -> (false or true),() -> (false or true),"def email_confirmed?
+    email_tokens.where(email: email, confirmed: true).present? ||
+    email_tokens.empty? ||
+    single_sign_on_record&.external_email == email
+  end"
+User,activate,() -> XXX,() -> (false or nil or true),"def activate
+    if email_token = self.email_tokens.active.where(email: self.email).first
+      user = EmailToken.confirm(email_token.token, skip_reviewable: true)
+    end
+    self.update!(active: true)
+    create_reviewable
+  end"
+User,number_of_deleted_posts,() -> Number,() -> Number,"def number_of_deleted_posts
+    Post.with_deleted
+      .where(user_id: self.id)
+      .where.not(deleted_at: nil)
+      .count
+  end"
+User,number_of_flags_given,() -> Number,() -> Number,"def number_of_flags_given
+    PostAction.where(user_id: self.id)
+      .where(disagreed_at: nil)
+      .where(post_action_type_id: PostActionType.notify_flag_type_ids)
+      .count
+  end"
+User,create_user_profile,() -> UserProfile,() -> UserProfile,"def create_user_profile
+    UserProfile.create!(user_id: id)
+  end"
+User,create_user_option,() -> UserOption,() -> UserOption,"def create_user_option
+    UserOption.create!(user_id: id)
+  end"
+User,create_email_token,() -> EmailToken,() -> EmailToken,"def create_email_token
+    email_tokens.create!(email: email)
+  end"
+User,seen_before?,() -> (false or true),() -> (false or true),"def seen_before?
+    last_seen_at.present?
+  end"
+User,new_user_posting_on_first_day?,() -> (false or true),() -> (false or true),"def new_user_posting_on_first_day?
+    !staff? &&
+    trust_level < TrustLevel[2] &&
+    (trust_level == TrustLevel[0] || self.first_post_created_at.nil? || self.first_post_created_at >= 24.hours.ago)
+  end"
+[s]EmailToken,active,() -> ActiveRecord_Relation<EmailToken>,() -> ActiveRecord_Relation<EmailToken>,"def self.active
+    where(expired: false).where('created_at > ?', valid_after)
+  end"
+[s]EmailToken,valid_after,() -> XXX,() -> DateTime,"def self.valid_after
+    SiteSetting.email_token_valid_hours.hours.ago
+  end"
+[s]EmailToken,confirm,"(XXX, { skip_reviewable: ?XXX }) -> nil",(String) -> (false or true),"def self.confirm(token, skip_reviewable: false)
+    User.transaction do
+      result = atomic_confirm(token)
+      user = result[:user]
+      if result[:success]
+        # If we are activating the user, send the welcome message
+        user.send_welcome_message = !user.active?
+        user.email = result[:email_token].email
+        user.active = true
+        user.custom_fields.delete('activation_reminder')
+        user.save!
+        user.create_reviewable unless skip_reviewable
+        user.set_automatic_groups
+      end
+
+      if user
+        if Invite.redeem_from_email(user.email).present?
+          return user.reload
+        end
+        user
+      end
+    end
+  rescue ActiveRecord::RecordInvalid
+    # If the user's email is already taken, just return nil (failure)
+  end"
+Post,seen?,(User) -> (false or true),(User) -> (false or true),"def seen?(user)
+    PostTiming.where(topic_id: topic_id, post_number: post_number, user_id: user.id).exists?
+  end"
+Post,is_flagged?,() -> (false or true),() -> (false or true),"def is_flagged?
+    post_actions.where(post_action_type_id: PostActionType.flag_types_without_custom.values, deleted_at: nil).count != 0
+  end"
+Post,is_reply_by_email?,() -> (false or true),() -> (false or true),"def is_reply_by_email?
+    via_email && post_number.present? && post_number > 1
+  end"
+Post,add_detail,"((String or Symbol), (String or Symbol), ?((String or Symbol))) -> PostDetail","(String, String, ?String) -> PostDetail","def add_detail(key, value, extra = nil)
+    post_details.build(key: key, value: value, extra: extra)
+  end"
+Post,limit_posts_per_day,() -> RateLimiter,() -> RateLimiter,"def limit_posts_per_day
+    if user && user.new_user_posting_on_first_day? && post_number && post_number > 1
+      RateLimiter.new(user, ""first-day-replies-per-day"", SiteSetting.max_replies_in_first_day, 1.day.to_i)
+    end
+  end"
+[s]Post,find_by_detail,"((String or Symbol), (String or Symbol)) -> Post","(String, String) -> Post","def self.find_by_detail(key, value)
+    includes(:post_details).find_by(post_details: { key: key, value: value })
+  end"
+[s]Archetype,private_message,() -> String,() -> String,"def self.private_message
+    'private_message'
+  end"
+Group,posts_for,"(TopicGuardian, ?([ []: (:before_post_id) -> XXX ] and [ []: (:category_id) -> XXX ])) -> XXX","(Guardian, ?Hash<Symbol, Number>) -> ActiveRecord_Relation<JoinTable<Post, (Category or Topic or User)>>","def posts_for(guardian, opts = nil)
+    opts ||= {}
+    result = Post.joins(:topic, user: :groups, topic: :category)
+      .preload(:topic, user: :groups, topic: :category)
+      .references(:posts, :topics, :category)
+      .where(groups: { id: id })
+      .where('topics.archetype <> ?', Archetype.private_message)
+      .where('topics.visible')
+      .where(post_type: Post.types[:regular])
+
+    if opts[:category_id].present?
+      result = result.where('topics.category_id = ?', opts[:category_id].to_i)
+    end
+
+    result = guardian.filter_allowed_categories(result)
+    result = result.where('posts.id < ?', opts[:before_post_id].to_i) if opts[:before_post_id]
+    result.order('posts.created_at desc')
+  end"
+Group,messages_for,"(TopicGuardian, ?([ []: (:before_post_id) -> XXX ] and [ []: (:category_id) -> XXX ])) -> XXX","(Guardian, ?Hash<Symbol, Number>) -> ActiveRecord_Relation<JoinTable<Post, (Category or Topic or User)>>","def messages_for(guardian, opts = nil)
+    opts ||= {}
+
+    result = Post.includes(:user, :topic, topic: :category)
+      .references(:posts, :topics, :category)
+      .where('topics.archetype = ?', Archetype.private_message)
+      .where(post_type: Post.types[:regular])
+      .where('topics.id IN (SELECT topic_id FROM topic_allowed_groups WHERE group_id = ?)', self.id)
+
+    if opts[:category_id].present?
+      result = result.where('topics.category_id = ?', opts[:category_id].to_i)
+    end
+
+    result = guardian.filter_allowed_categories(result)
+    result = result.where('posts.id < ?', opts[:before_post_id].to_i) if opts[:before_post_id]
+    result.order('posts.created_at desc')
+  end"
+Group,mentioned_posts_for,"(TopicGuardian, ?([ []: (:before_post_id) -> XXX ] and [ []: (:category_id) -> XXX ])) -> XXX","(Guardian, ?Hash<Symbol, Number>) -> ActiveRecord_Relation<JoinTable<Post, (Category or GroupMention or Topic or User)>>","def mentioned_posts_for(guardian, opts = nil)
+    opts ||= {}
+    result = Post.joins(:group_mentions)
+      .includes(:user, :topic, topic: :category)
+      .references(:posts, :topics, :category)
+      .where('topics.archetype <> ?', Archetype.private_message)
+      .where(post_type: Post.types[:regular])
+      .where('group_mentions.group_id = ?', self.id)
+
+    if opts[:category_id].present?
+      result = result.where('topics.category_id = ?', opts[:category_id].to_i)
+    end
+
+    result = guardian.filter_allowed_categories(result)
+    result = result.where('posts.id < ?', opts[:before_post_id].to_i) if opts[:before_post_id]
+    result.order('posts.created_at desc')
+  end"
+[s]Group,trust_group_ids,() -> Array<Number>,() -> Array<Number>,"def self.trust_group_ids
+    (10..19).to_a
+  end"
+[s]Group,desired_trust_level_groups,([ +: (Number) -> XXX ]) -> Array<Number>,(Number) -> Array<Number>,"def self.desired_trust_level_groups(trust_level)
+    trust_group_ids.keep_if do |id|
+      id == AUTO_GROUPS[:trust_level_0] || (trust_level + 10) >= id
+    end
+  end"
+[s]Group,user_trust_level_change!,"(Number, [ +: (Number) -> XXX ]) -> Array<Number>","(Number, Number) -> Array<Number>","def self.user_trust_level_change!(user_id, trust_level)
+    desired = desired_trust_level_groups(trust_level)
+    undesired = trust_group_ids - desired
+
+    GroupUser.where(group_id: undesired, user_id: user_id).delete_all
+
+    desired.each do |id|
+      if group = find_by(id: id)
+        unless GroupUser.where(group_id: id, user_id: user_id).exists?
+          group.group_users.create!(user_id: user_id)
+        end
+      else
+        name = AUTO_GROUP_IDS[trust_level]
+        refresh_automatic_group!(name)
+      end
+    end
+  end"
+[s]Group,refresh_automatic_group!,((String or Symbol)) -> Group,(Symbol) -> Group,"def self.refresh_automatic_group!(name)
+    return unless id = AUTO_GROUPS[name]
+
+    unless group = self.lookup_group(name)
+      group = Group.new(name: name.to_s, automatic: true)
+
+      if AUTO_GROUPS[:moderators] == id
+        group.default_notification_level = 2
+        group.messageable_level = ALIAS_LEVELS[:everyone]
+      end
+
+      group.id = id
+      group.save!
+    end
+
+    # don't allow shoddy localization to break this
+    localized_name = User.normalize_username(I18n.t(""groups.default_names.#{name}"", locale: SiteSetting.default_locale))
+    validator = UsernameValidator.new(localized_name)
+
+    if validator.valid_format? && !User.username_exists?(localized_name)
+      group.name = localized_name
+    end
+
+    # the everyone group is special, it can include non-users so there is no
+    # way to have the membership in a table
+    case name
+    when :everyone
+      group.visibility_level = Group.visibility_levels[:staff]
+      group.save!
+      return group
+    when :moderators
+      group.update!(messageable_level: ALIAS_LEVELS[:everyone])
+    end
+
+    group.update!(visibility_level: Group.visibility_levels[:logged_on_users]) if group.visibility_level == Group.visibility_levels[:public]
+
+    # Remove people from groups they don't belong in.
+    remove_subquery =
+      case name
+      when :admins
+        ""SELECT id FROM users WHERE id <= 0 OR NOT admin OR staged""
+      when :moderators
+        ""SELECT id FROM users WHERE id <= 0 OR NOT moderator OR staged""
+      when :staff
+        ""SELECT id FROM users WHERE id <= 0 OR (NOT admin AND NOT moderator) OR staged""
+      when :trust_level_0, :trust_level_1, :trust_level_2, :trust_level_3, :trust_level_4
+        ""SELECT id FROM users WHERE id <= 0 OR trust_level < #{id - 10} OR staged""
+      end
+
+    DB.exec <<-SQL
+      DELETE FROM group_users
+            USING (#{remove_subquery}) X
+            WHERE group_id = #{group.id}
+              AND user_id = X.id
+    SQL
+
+    # Add people to groups
+    insert_subquery =
+      case name
+      when :admins
+        ""SELECT id FROM users WHERE id > 0 AND admin AND NOT staged""
+      when :moderators
+        ""SELECT id FROM users WHERE id > 0 AND moderator AND NOT staged""
+      when :staff
+        ""SELECT id FROM users WHERE id > 0 AND (moderator OR admin) AND NOT staged""
+      when :trust_level_1, :trust_level_2, :trust_level_3, :trust_level_4
+        ""SELECT id FROM users WHERE id > 0 AND trust_level >= #{id - 10} AND NOT staged""
+      when :trust_level_0
+        ""SELECT id FROM users WHERE id > 0 AND NOT staged""
+      end
+
+    DB.exec <<-SQL
+      INSERT INTO group_users (group_id, user_id, created_at, updated_at)
+           SELECT #{group.id}, X.id, now(), now()
+             FROM group_users
+       RIGHT JOIN (#{insert_subquery}) X ON X.id = user_id AND group_id = #{group.id}
+            WHERE user_id IS NULL
+    SQL
+
+    group.save!
+
+    # we want to ensure consistency
+    Group.reset_counters(group.id, :group_users)
+
+    group
+  end"
+[s]Group,lookup_group,((String or Symbol)) -> Group,(Symbol) -> Group,"def self.lookup_group(name)
+    if id = AUTO_GROUPS[name]
+      Group.find_by(id: id)
+    else
+      unless group = Group.find_by(name: name)
+        raise ArgumentError, ""unknown group""
+      end
+      group
+    end
+  end"
+[s]Draft,find_draft,"((Number and [ id: () -> XXX ]), (String or Symbol)) -> Draft","((Number or User), String) -> Draft","def self.find_draft(user, key)
+    if user.is_a?(User)
+      find_by(user_id: user.id, draft_key: key)
+    else
+      find_by(user_id: user, draft_key: key)
+    end
+  end"
+Topic,update_action_counts,() -> (false or true),() -> (false or true),"def update_action_counts
+    update_column(:like_count, Post.where(topic_id: id).sum(:like_count))
+  end"
+Topic,has_topic_embed?,() -> (false or true),() -> (false or true),"def has_topic_embed?
+    TopicEmbed.where(topic_id: id).exists?
+  end"
+Topic,expandable_first_post?,() -> (false or true),() -> (false or true),"def expandable_first_post?
+    SiteSetting.embed_truncate? && has_topic_embed?
+  end"
+[s]Notification,remove_for,"(Number, Number) -> Number","(Number, Number) -> Number","def self.remove_for(user_id, topic_id)
+    Notification.where(user_id: user_id, topic_id: topic_id).delete_all
+  end"
+Notification,post,() -> Post,() -> Post,"def post
+    return if topic_id.blank? || post_number.blank?
+    Post.find_by(topic_id: topic_id, post_number: post_number)
+  end"
+[s]Badge,trust_level_badge_ids,() -> Array<Number>,"() -> [Number, Number, Number, Number]","def self.trust_level_badge_ids
+    (1..4).to_a
+  end"
+[s]PostActionType,notify_flag_type_ids,() -> Array<Number>,() -> Array<Number>,"def notify_flag_type_ids
+      notify_flag_types.values
+    end"
+RateLimiter,@user,User,,
+RateLimiter,@type,String,,
+RateLimiter,@key,XXX,,
+RateLimiter,@max,XXX,,
+RateLimiter,@secs,Number,,
+RateLimiter,@global,false,,
+RateLimiter,initialize,"(User, String, XXX, Number, { global: ?false }) -> self","(User, String, Number, Number, ?{ global: (false or true) }) -> self","def initialize(user, type, max, secs, global: false)
+    @user = user
+    @type = type
+    @key = build_key(type)
+    @max = max
+    @secs = secs
+    @global = global
+  end"
+UsernameValidator,@username,String,,
+UsernameValidator,@errors,Array<XXX>,,
+UsernameValidator,initialize,(String) -> self,(String) -> self,"def initialize(username)
+    @username = username&.unicode_normalize
+    @errors = []
+  end"
+UsernameValidator,valid_format?,() -> (false or true),() -> (false or true),"def valid_format?
+    username_present?
+    username_length_min?
+    username_length_max?
+    username_char_valid?
+    username_char_whitelisted?
+    username_first_char_valid?
+    username_last_char_valid?
+    username_no_double_special?
+    username_does_not_end_with_confusing_suffix?
+    errors.empty?
+  end"

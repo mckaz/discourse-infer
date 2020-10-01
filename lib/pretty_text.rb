@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'mini_racer'
+#require 'mini_racer'
 require 'nokogiri'
 require 'erb'
 require_dependency 'url_helper'

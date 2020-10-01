@@ -4,9 +4,10 @@ source 'https://rubygems.org'
 # if there is a super emergency and rubygems is playing up, try
 #source 'http://production.cf.rubygems.org'
 
-gem 'bootsnap', require: false, platform: :mri
+#gem 'bootsnap', require: false, platform: :mri
 #gem 'rdl', git: 'https://github.com/tupl-tufts/rdl.git', branch: 'infer'
-gem 'rdl', git: 'https://github.com/mckaz/dsl-infer-rdl/', branch: 'infer'#path: '~/Documents/works/tmp-rdl/rdl'
+gem 'rdl', git: 'https://github.com/mckaz/dsl-infer-rdl/', branch: 'infer'
+
 
 
 
@@ -116,8 +117,10 @@ gem 'mini_scheduler'
 # for sidekiq web
 gem 'tilt', require: false
 
-gem 'execjs', require: false
-gem 'mini_racer'
+gem 'execjs'#, require: false
+#gem 'mini_racer'
+#gem 'therubyracer', :platforms => :ruby
+
 
 gem 'highline'#, '~> 1.7.0', require: false
 

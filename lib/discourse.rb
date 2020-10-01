@@ -147,6 +147,7 @@ module Discourse
 
     if Rails.env.development?
       plugin_hash = Digest::SHA1.hexdigest(all_plugins.map { |p| p.path }.sort.join('|'))
+      Dir.mkdir("#{Rails.root}/tmp") unless File.exists?("#{Rails.root}/tmp")
       hash_file = "#{Rails.root}/tmp/plugin-hash"
 
       old_hash = begin

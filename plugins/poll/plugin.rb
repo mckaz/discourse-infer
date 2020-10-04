@@ -1,3 +1,4 @@
+# coding: utf-8
 # frozen_string_literal: true
 
 # name: poll
@@ -276,7 +277,7 @@ after_initialize do
       def extract(raw, topic_id, user_id = nil)
         # TODO: we should fix the callback mess so that the cooked version is available
         # in the validators instead of cooking twice
-        cooked = PrettyText.cook(raw, topic_id: topic_id, user_id: user_id)
+        cooked = "dummy"#MKCHANGE PrettyText.cook(raw, topic_id: topic_id, user_id: user_id)
 
         Nokogiri::HTML(cooked).css("div.poll").map do |p|
           poll = { "options" => [], "name" => DiscoursePoll::DEFAULT_POLL_NAME }

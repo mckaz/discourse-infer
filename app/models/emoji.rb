@@ -177,7 +177,7 @@ class Emoji
   end
 
   def self.unicode_unescape(string)
-    PrettyText.escape_emoji(string)
+    string #MK CHANGE #PrettyText.escape_emoji(string)
   end
 
   def self.gsub_emoji_to_unicode(str)

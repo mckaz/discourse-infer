@@ -279,7 +279,7 @@ class Group < ActiveRecord::Base
 
   def cook_bio
     if self.bio_raw.present?
-      self.bio_cooked = PrettyText.cook(self.bio_raw)
+      self.bio_cooked = "dummy" #MKCHANGE PrettyText.cook(self.bio_raw)
     else
       self.bio_cooked = nil
     end

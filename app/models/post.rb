@@ -453,7 +453,7 @@ class Post < ActiveRecord::Base
 
   def self.excerpt(cooked, maxlength = nil, options = {})
     maxlength ||= SiteSetting.post_excerpt_maxlength
-    PrettyText.excerpt(cooked, maxlength, options)
+    "dummy" #MKCHANGE PrettyText.excerpt(cooked, maxlength, options)
   end
 
   # Strip out most of the markup

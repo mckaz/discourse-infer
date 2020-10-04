@@ -116,7 +116,7 @@ module PrettyText
   end
 
   def self.v8
-    return @ctx if @ctx
+    return @ctx #if @ctx
 
     # ensure we only init one of these
     @ctx_init.synchronize do

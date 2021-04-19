@@ -176,5 +176,5 @@ end
 
 
 
-RDL.do_infer :later, num_times: 1#1
+RDL.do_infer :later, num_times: 1
 

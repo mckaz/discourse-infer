@@ -1,5 +1,5 @@
-Class,Method/Variable,Inferred Type,Original Type,Source Code,Comments
-[s]User,new_from_params,"({ name: XXX, email: XXX, password: XXX, username: XXX }) -> XXX","({ name: String, email: String, password: String, username: String }) -> User","def self.new_from_params(params)
+Class,Method,Inferred Type,Original Type,Source Code,Comments
+[s]User,new_from_params,(([ []: (:email) -> XXX ] and [ []: (:name) -> XXX ] and [ []: (:password) -> XXX ] and [ []: (:username) -> XXX ])) -> XXX,"({ name: String, email: String, password: String, username: String }) -> User","def self.new_from_params(params)
     user = User.new
     user.name = params[:name]
     user.email = params[:email]
@@ -7,10 +7,10 @@ Class,Method/Variable,Inferred Type,Original Type,Source Code,Comments
     user.username = params[:username]
     user
   end"
-[s]User,find_by_username,(String) -> User,(String) -> User,"def self.find_by_username(username)
+[s]User,find_by_username,(Number) -> User,(String) -> User,"def self.find_by_username(username)
     find_by(username_lower: normalize_username(username))
   end"
-[s]User,username_available?,"(String, ?[ present?: () -> XXX ], { allow_reserved_username: ?[ !: () -> XXX ] }) -> (false or true)","(String, ?String) -> (false or true)","def self.username_available?(username, email = nil, allow_reserved_username: false)
+[s]User,username_available?,"(Number, ?Number, { allow_reserved_username: ?((false or true)) }) -> (false or true)","(String, ?String) -> (false or true)","def self.username_available?(username, email = nil, allow_reserved_username: false)
     lower = normalize_username(username)
     return false if !allow_reserved_username && reserved_username?(lower)
     return true  if !username_exists?(lower)
@@ -18,7 +18,7 @@ Class,Method/Variable,Inferred Type,Original Type,Source Code,Comments
     # staged users can use the same username since they will take over the account
     email.present? && User.joins(:user_emails).exists?(staged: true, username_lower: lower, user_emails: { primary: true, email: email })
   end"
-[s]User,reserved_username?,(String) -> (false or true),(String) -> (false or true),"def self.reserved_username?(username)
+[s]User,reserved_username?,([ match?: (Regexp) -> XXX ]) -> (false or true),(String) -> (false or true),"def self.reserved_username?(username)
     username = normalize_username(username)
 
     SiteSetting.reserved_usernames.unicode_normalize.split(""|"").any? do |reserved|
@@ -53,7 +53,7 @@ User,email_confirmed?,() -> (false or true),() -> (false or true),"def email_con
     email_tokens.empty? ||
     single_sign_on_record&.external_email == email
   end"
-User,activate,() -> XXX,() -> (false or nil or true),"def activate
+User,activate,() -> (false or true),() -> (false or nil or true),"def activate
     if email_token = self.email_tokens.active.where(email: self.email).first
       user = EmailToken.confirm(email_token.token, skip_reviewable: true)
     end
@@ -95,7 +95,7 @@ User,new_user_posting_on_first_day?,() -> (false or true),() -> (false or true),
 [s]EmailToken,valid_after,() -> XXX,() -> DateTime,"def self.valid_after
     SiteSetting.email_token_valid_hours.hours.ago
   end"
-[s]EmailToken,confirm,"(XXX, { skip_reviewable: ?XXX }) -> nil",(String) -> (false or true),"def self.confirm(token, skip_reviewable: false)
+[s]EmailToken,confirm,"(XXX, { skip_reviewable: ?((false or true)) }) -> nil",(String) -> (false or true),"def self.confirm(token, skip_reviewable: false)
     User.transaction do
       result = atomic_confirm(token)
       user = result[:user]
@@ -120,7 +120,7 @@ User,new_user_posting_on_first_day?,() -> (false or true),() -> (false or true),
   rescue ActiveRecord::RecordInvalid
     # If the user's email is already taken, just return nil (failure)
   end"
-Post,seen?,(User) -> (false or true),(User) -> (false or true),"def seen?(user)
+Post,seen?,([ id: () -> XXX ]) -> (false or true),(User) -> (false or true),"def seen?(user)
     PostTiming.where(topic_id: topic_id, post_number: post_number, user_id: user.id).exists?
   end"
 Post,is_flagged?,() -> (false or true),() -> (false or true),"def is_flagged?
@@ -143,7 +143,7 @@ Post,limit_posts_per_day,() -> RateLimiter,() -> RateLimiter,"def limit_posts_pe
 [s]Archetype,private_message,() -> String,() -> String,"def self.private_message
     'private_message'
   end"
-Group,posts_for,"(TopicGuardian, ?([ []: (:before_post_id) -> XXX ] and [ []: (:category_id) -> XXX ])) -> XXX","(Guardian, ?Hash<Symbol, Number>) -> ActiveRecord_Relation<JoinTable<Post, (Category or Topic or User)>>","def posts_for(guardian, opts = nil)
+Group,posts_for,"([ filter_allowed_categories: (ActiveRecord_Relation<JoinTable<Post, (Category or Group or Topic or User)>>) -> XXX ], ?([ []: (:before_post_id) -> XXX ] and [ []: (:category_id) -> XXX ])) -> XXX","(Guardian, ?Hash<Symbol, Number>) -> ActiveRecord_Relation<JoinTable<Post, (Category or Topic or User)>>","def posts_for(guardian, opts = nil)
     opts ||= {}
     result = Post.joins(:topic, user: :groups, topic: :category)
       .preload(:topic, user: :groups, topic: :category)
@@ -161,7 +161,7 @@ Group,posts_for,"(TopicGuardian, ?([ []: (:before_post_id) -> XXX ] and [ []: (:
     result = result.where('posts.id < ?', opts[:before_post_id].to_i) if opts[:before_post_id]
     result.order('posts.created_at desc')
   end"
-Group,messages_for,"(TopicGuardian, ?([ []: (:before_post_id) -> XXX ] and [ []: (:category_id) -> XXX ])) -> XXX","(Guardian, ?Hash<Symbol, Number>) -> ActiveRecord_Relation<JoinTable<Post, (Category or Topic or User)>>","def messages_for(guardian, opts = nil)
+Group,messages_for,"([ filter_allowed_categories: (ActiveRecord_Relation<JoinTable<Post, (Category or Topic or User)>>) -> XXX ], ?([ []: (:before_post_id) -> XXX ] and [ []: (:category_id) -> XXX ])) -> XXX","(Guardian, ?Hash<Symbol, Number>) -> ActiveRecord_Relation<JoinTable<Post, (Category or Topic or User)>>","def messages_for(guardian, opts = nil)
     opts ||= {}
 
     result = Post.includes(:user, :topic, topic: :category)
@@ -178,7 +178,7 @@ Group,messages_for,"(TopicGuardian, ?([ []: (:before_post_id) -> XXX ] and [ []:
     result = result.where('posts.id < ?', opts[:before_post_id].to_i) if opts[:before_post_id]
     result.order('posts.created_at desc')
   end"
-Group,mentioned_posts_for,"(TopicGuardian, ?([ []: (:before_post_id) -> XXX ] and [ []: (:category_id) -> XXX ])) -> XXX","(Guardian, ?Hash<Symbol, Number>) -> ActiveRecord_Relation<JoinTable<Post, (Category or GroupMention or Topic or User)>>","def mentioned_posts_for(guardian, opts = nil)
+Group,mentioned_posts_for,"([ filter_allowed_categories: (ActiveRecord_Relation<JoinTable<Post, (Category or GroupMention or Topic or User)>>) -> XXX ], ?([ []: (:before_post_id) -> XXX ] and [ []: (:category_id) -> XXX ])) -> XXX","(Guardian, ?Hash<Symbol, Number>) -> ActiveRecord_Relation<JoinTable<Post, (Category or GroupMention or Topic or User)>>","def mentioned_posts_for(guardian, opts = nil)
     opts ||= {}
     result = Post.joins(:group_mentions)
       .includes(:user, :topic, topic: :category)
@@ -332,7 +332,7 @@ Topic,has_topic_embed?,() -> (false or true),() -> (false or true),"def has_topi
 Topic,expandable_first_post?,() -> (false or true),() -> (false or true),"def expandable_first_post?
     SiteSetting.embed_truncate? && has_topic_embed?
   end"
-[s]Notification,remove_for,"(Number, Number) -> Number","(Number, Number) -> Number","def self.remove_for(user_id, topic_id)
+[s]Notification,remove_for,"((Array<Number> or Number), (Array<Number> or Number)) -> Number","(Number, Number) -> Number","def self.remove_for(user_id, topic_id)
     Notification.where(user_id: user_id, topic_id: topic_id).delete_all
   end"
 Notification,post,() -> Post,() -> Post,"def post
@@ -342,16 +342,10 @@ Notification,post,() -> Post,() -> Post,"def post
 [s]Badge,trust_level_badge_ids,() -> Array<Number>,"() -> [Number, Number, Number, Number]","def self.trust_level_badge_ids
     (1..4).to_a
   end"
-[s]PostActionType,notify_flag_type_ids,() -> Array<Number>,() -> Array<Number>,"def notify_flag_type_ids
+[s]PostActionType,notify_flag_type_ids,() -> XXX,() -> Array<Number>,"def notify_flag_type_ids
       notify_flag_types.values
     end"
-RateLimiter,@user,User,,
-RateLimiter,@type,String,,
-RateLimiter,@key,XXX,,
-RateLimiter,@max,XXX,,
-RateLimiter,@secs,Number,,
-RateLimiter,@global,false,,
-RateLimiter,initialize,"(User, String, XXX, Number, { global: ?false }) -> self","(User, String, Number, Number, ?{ global: (false or true) }) -> self","def initialize(user, type, max, secs, global: false)
+RateLimiter,initialize,"(User, String, Number, Number, { global: ?((false or true)) }) -> self","(User, String, Number, Number, ?{ global: (false or true) }) -> self","def initialize(user, type, max, secs, global: false)
     @user = user
     @type = type
     @key = build_key(type)
@@ -359,9 +353,7 @@ RateLimiter,initialize,"(User, String, XXX, Number, { global: ?false }) -> self"
     @secs = secs
     @global = global
   end"
-UsernameValidator,@username,String,,
-UsernameValidator,@errors,Array<XXX>,,
-UsernameValidator,initialize,(String) -> self,(String) -> self,"def initialize(username)
+UsernameValidator,initialize,([ unicode_normalize: () -> XXX ]) -> self,(String) -> self,"def initialize(username)
     @username = username&.unicode_normalize
     @errors = []
   end"

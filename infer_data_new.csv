@@ -7,10 +7,10 @@ Class,Method,Inferred Type,Original Type,Source Code,Comments
     user.username = params[:username]
     user
   end"
-[s]User,find_by_username,(Number) -> User,(String) -> User,"def self.find_by_username(username)
+[s]User,find_by_username,(XXX) -> User,(String) -> User,"def self.find_by_username(username)
     find_by(username_lower: normalize_username(username))
   end"
-[s]User,username_available?,"(Number, ?Number, { allow_reserved_username: ?((false or true)) }) -> (false or true)","(String, ?String) -> (false or true)","def self.username_available?(username, email = nil, allow_reserved_username: false)
+[s]User,username_available?,"(XXX, ?[ present?: () -> XXX ], { allow_reserved_username: ?[ !: () -> XXX ] }) -> (false or true)","(String, ?String) -> (false or true)","def self.username_available?(username, email = nil, allow_reserved_username: false)
     lower = normalize_username(username)
     return false if !allow_reserved_username && reserved_username?(lower)
     return true  if !username_exists?(lower)
@@ -18,7 +18,7 @@ Class,Method,Inferred Type,Original Type,Source Code,Comments
     # staged users can use the same username since they will take over the account
     email.present? && User.joins(:user_emails).exists?(staged: true, username_lower: lower, user_emails: { primary: true, email: email })
   end"
-[s]User,reserved_username?,([ match?: (Regexp) -> XXX ]) -> (false or true),(String) -> (false or true),"def self.reserved_username?(username)
+[s]User,reserved_username?,([ match?: (Regexp) -> XXX ]) -> XXX,(String) -> (false or true),"def self.reserved_username?(username)
     username = normalize_username(username)
 
     SiteSetting.reserved_usernames.unicode_normalize.split(""|"").any? do |reserved|
@@ -53,7 +53,7 @@ User,email_confirmed?,() -> (false or true),() -> (false or true),"def email_con
     email_tokens.empty? ||
     single_sign_on_record&.external_email == email
   end"
-User,activate,() -> (false or true),() -> (false or nil or true),"def activate
+User,activate,() -> XXX,() -> (false or nil or true),"def activate
     if email_token = self.email_tokens.active.where(email: self.email).first
       user = EmailToken.confirm(email_token.token, skip_reviewable: true)
     end
@@ -95,7 +95,7 @@ User,new_user_posting_on_first_day?,() -> (false or true),() -> (false or true),
 [s]EmailToken,valid_after,() -> XXX,() -> DateTime,"def self.valid_after
     SiteSetting.email_token_valid_hours.hours.ago
   end"
-[s]EmailToken,confirm,"(XXX, { skip_reviewable: ?((false or true)) }) -> nil",(String) -> (false or true),"def self.confirm(token, skip_reviewable: false)
+[s]EmailToken,confirm,"(XXX, { skip_reviewable: ?XXX }) -> nil",(String) -> (false or true),"def self.confirm(token, skip_reviewable: false)
     User.transaction do
       result = atomic_confirm(token)
       user = result[:user]
@@ -345,7 +345,7 @@ Notification,post,() -> Post,() -> Post,"def post
 [s]PostActionType,notify_flag_type_ids,() -> XXX,() -> Array<Number>,"def notify_flag_type_ids
       notify_flag_types.values
     end"
-RateLimiter,initialize,"(User, String, Number, Number, { global: ?((false or true)) }) -> self","(User, String, Number, Number, ?{ global: (false or true) }) -> self","def initialize(user, type, max, secs, global: false)
+RateLimiter,initialize,"(User, String, XXX, Number, { global: ?((false or true)) }) -> self","(User, String, Number, Number, ?{ global: (false or true) }) -> self","def initialize(user, type, max, secs, global: false)
     @user = user
     @type = type
     @key = build_key(type)
@@ -357,7 +357,7 @@ UsernameValidator,initialize,([ unicode_normalize: () -> XXX ]) -> self,(String)
     @username = username&.unicode_normalize
     @errors = []
   end"
-UsernameValidator,valid_format?,() -> (false or true),() -> (false or true),"def valid_format?
+UsernameValidator,valid_format?,() -> XXX,() -> (false or true),"def valid_format?
     username_present?
     username_length_min?
     username_length_max?

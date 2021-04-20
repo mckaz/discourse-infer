@@ -25,14 +25,14 @@ class UserProfile < ActiveRecord::Base
 
   def bio_excerpt(length = 350, opts = {})
     return nil if bio_cooked.blank?
-    excerpt = PrettyText.excerpt(bio_cooked, length, opts).sub(/<br>$/, '')
+    excerpt = "dummy" #MKCHANGE #PrettyText.excerpt(bio_cooked, length, opts).sub(/<br>$/, '')
     return excerpt if excerpt.blank? || (user.has_trust_level?(TrustLevel[1]) && !user.suspended?)
-    PrettyText.strip_links(excerpt)
+    "dummy" #MKCHANGE #PrettyText.strip_links(excerpt)
   end
 
   def bio_processed
     return bio_cooked if bio_cooked.blank? || (user.has_trust_level?(TrustLevel[1]) && !user.suspended?)
-    PrettyText.strip_links(bio_cooked)
+    "dummy" #MKCHANGE #PrettyText.strip_links(bio_cooked)
   end
 
   def bio_summary
@@ -117,7 +117,7 @@ class UserProfile < ActiveRecord::Base
 
   def cooked
     if self.bio_raw.present?
-      PrettyText.cook(self.bio_raw, omit_nofollow: user.has_trust_level?(TrustLevel[3]) && !SiteSetting.tl3_links_no_follow)
+      "dummy" #MKCHANGE #PrettyText.cook(self.bio_raw, omit_nofollow: user.has_trust_level?(TrustLevel[3]) && !SiteSetting.tl3_links_no_follow)
     else
       nil
     end

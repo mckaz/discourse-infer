@@ -29,9 +29,9 @@ class PostAnalyzer
     return raw if cook_method == Post.cook_methods[:raw_html]
 
     if cook_method == Post.cook_methods[:email]
-      cooked = EmailCook.new(raw).cook(opts)
+      cooked = "dummy" #MKCHANGE #EmailCook.new(raw).cook(opts)
     else
-      cooked = PrettyText.cook(raw, opts)
+      cooked = "dummy" #MKCHANGE #PrettyText.cook(raw, opts)
     end
 
     result = Oneboxer.apply(cooked) do |url|

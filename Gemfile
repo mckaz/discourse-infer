@@ -4,10 +4,9 @@ source 'https://rubygems.org'
 # if there is a super emergency and rubygems is playing up, try
 #source 'http://production.cf.rubygems.org'
 
-gem 'bootsnap', require: false, platform: :mri
-#gem 'rdl', git: 'https://github.com/tupl-tufts/rdl.git', branch: 'infer'
-#gem 'rdl', git: 'https://github.com/mckaz/dsl-infer-rdl/', branch: 'infer'
-gem 'rdl', path: '~/Documents/works/twin_rdl/rdl'#'~/Documents/works/tmp-rdl/rdl'
+#gem 'bootsnap', require: false, platform: :mri
+gem 'rdl', git: 'https://github.com/mckaz/rdl.git', branch: 'ml_infer'
+
 
 
 
@@ -118,7 +117,7 @@ gem 'mini_scheduler'
 gem 'tilt', require: false
 
 gem 'execjs'#, require: false
-gem 'mini_racer'
+#gem 'mini_racer'
 #gem 'therubyracer', :platforms => :ruby
 
 

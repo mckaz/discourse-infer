@@ -110,6 +110,7 @@ class TopicLink < ActiveRecord::Base
   end
 
   def self.extract_from(post)
+    return #MKCHANGE
     return if post.blank? || post.whisper?
 
     current_urls = []

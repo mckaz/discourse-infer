@@ -4,16 +4,16 @@ class [s]User
   sig { params(params: T.untyped).returns(T.untyped) }
   def new_from_params(params); end
 
-  # RDL Type: (Number) -> User
-  sig { params(username: Integer).returns(User) }
+  # RDL Type: (XXX) -> User
+  sig { params(username: T.untyped).returns(User) }
   def find_by_username(username); end
 
-  # RDL Type: (Number, ?Number, { allow_reserved_username: ?((false or true)) }) -> (false or true)
-  sig { params(username: Integer, email: Integer, allow_reserved_username: T.nilable(T.any(FalseClass, TrueClass))).returns(T.any(FalseClass, TrueClass)) }
+  # RDL Type: (XXX, ?[ present?: () -> XXX ], { allow_reserved_username: ?[ !: () -> XXX ] }) -> (false or true)
+  sig { params(username: T.untyped, email: T.untyped, allow_reserved_username: T.nilable(T.untyped)).returns(T.any(FalseClass, TrueClass)) }
   def username_available?(username, email = nil, allow_reserved_username: nil); end
 
-  # RDL Type: ([ match?: (Regexp) -> XXX ]) -> (false or true)
-  sig { params(username: T.untyped).returns(T.any(FalseClass, TrueClass)) }
+  # RDL Type: ([ match?: (Regexp) -> XXX ]) -> XXX
+  sig { params(username: T.untyped).returns(T.untyped) }
   def reserved_username?(username); end
 end
 
@@ -26,8 +26,8 @@ class User
   sig { returns(T.any(FalseClass, TrueClass)) }
   def email_confirmed?; end
 
-  # RDL Type: () -> (false or true)
-  sig { returns(T.any(FalseClass, TrueClass)) }
+  # RDL Type: () -> XXX
+  sig { returns(T.untyped) }
   def activate; end
 
   # RDL Type: () -> Number
@@ -68,8 +68,8 @@ class [s]EmailToken
   sig { returns(T.untyped) }
   def valid_after; end
 
-  # RDL Type: (XXX, { skip_reviewable: ?((false or true)) }) -> nil
-  sig { params(token: T.untyped, skip_reviewable: T.nilable(T.any(FalseClass, TrueClass))).void }
+  # RDL Type: (XXX, { skip_reviewable: ?XXX }) -> nil
+  sig { params(token: T.untyped, skip_reviewable: T.nilable(T.untyped)).void }
   def confirm(token, skip_reviewable: nil); end
 end
 
@@ -188,12 +188,12 @@ class [s]PostActionType
 end
 
 class RateLimiter
-  # RDL Type: (User, String, Number, Number, { global: ?((false or true)) }) -> self
+  # RDL Type: (User, String, XXX, Number, { global: ?((false or true)) }) -> self
   sig do
     params(
       user: User,
       type: String,
-      max: Integer,
+      max: T.untyped,
       secs: Integer,
       global: T.nilable(T.any(FalseClass, TrueClass))
     ).returns(T.self_type)
@@ -206,7 +206,7 @@ class UsernameValidator
   sig { params(username: T.untyped).returns(T.self_type) }
   def initialize(username); end
 
-  # RDL Type: () -> (false or true)
-  sig { returns(T.any(FalseClass, TrueClass)) }
+  # RDL Type: () -> XXX
+  sig { returns(T.untyped) }
   def valid_format?; end
 end
